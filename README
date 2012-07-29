@@ -1,2 +1,6 @@
 Idibot is a bot that plays the Ants AI Challenge game.
 See http://aichallenge.org/
+
+/ants contains code for interfacing with the ants game.
+
+/starter_bot contains skeleton code for creating a bot.
