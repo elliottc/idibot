@@ -219,6 +219,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 }
 
 //Call IssueOrderRowCol to issue an order for an ant at (Row, Col)
+//Note that NoMovement is not a valid direction.
 func (s *State) IssueOrderRowCol(Row, Col int, d Direction) {
 	loc := s.Map.FromRowCol(Row, Col)
 	dest := s.Map.Move(loc, d)
@@ -228,6 +229,7 @@ func (s *State) IssueOrderRowCol(Row, Col int, d Direction) {
 }
 
 //Call IssueOrderLoc to issue an order for an ant at loc
+//Note that NoMovement is not a valid direction.
 func (s *State) IssueOrderLoc(loc Location, d Direction) {
 	Row, Col := s.Map.FromLocation(loc)
 	dest := s.Map.Move(loc, d)

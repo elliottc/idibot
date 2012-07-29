@@ -1,0 +1,9 @@
+idibot1 implements the following strategies:
+- Go toward food
+- Go away from friendly ants
+- Go away from own hill
+- Go toward enemy hills
+
+These are implemented so that the heuristic becomes stronger as the ant gets closer to the target.
+Selection of moves is ultimately a weighted random selection of all possible moves.
+This ensures ants don't become permanently stuck.
