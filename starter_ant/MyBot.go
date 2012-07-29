@@ -1,12 +1,15 @@
 package main
 
-import "math/rand"
+import (
+	"idibot/ants"
+	"math/rand"
+)
 
 type MyBot struct {
 }
 
 //NewBot creates a new instance of your bot
-func NewBot(s *State) Bot {
+func NewBot(s *ants.State) ants.Bot {
 	mb := &MyBot{
 	//do any necessary initialization here
 	}
@@ -14,10 +17,10 @@ func NewBot(s *State) Bot {
 }
 
 //DoTurn is where you should do your bot's actual work.
-func (mb *MyBot) DoTurn(s *State) error {
-	dirs := []Direction{North, East, South, West}
+func (mb *MyBot) DoTurn(s *ants.State) error {
+	dirs := []ants.Direction{ants.North, ants.East, ants.South, ants.West}
 	for loc, ant := range s.Map.Ants {
-		if ant != MY_ANT {
+		if ant != ants.MY_ANT {
 			continue
 		}
 

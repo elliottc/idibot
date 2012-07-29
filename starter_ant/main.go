@@ -1,15 +1,14 @@
 package main
 
 import (
+	"idibot/ants"
 	"io"
 	"log"
 )
 
 //main initializes the state and starts the processing loop
 func main() {
-	log.Panicf("Start() failed (%s)")
-
-	var s State
+	var s ants.State
 	err := s.Start()
 	if err != nil {
 		log.Panicf("Start() failed (%s)", err)
