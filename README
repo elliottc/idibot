@@ -3,4 +3,4 @@ See http://aichallenge.org/
 
 /ants contains code for interfacing with the ants game.
 
-/starter_bot contains skeleton code for creating a bot.
+/bots contains various bot implementations using different strategies.

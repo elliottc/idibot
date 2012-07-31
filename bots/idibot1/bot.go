@@ -1,9 +1,9 @@
 package main
 
 import (
+	"idibot"
 	"idibot/ants"
 	"math"
-	"math/rand"
 )
 
 type Bot struct {
@@ -18,6 +18,17 @@ func NewBot(s *ants.State) ants.Bot {
 	return bot
 }
 
+func myAnts(allAnts map[ants.Location]ants.Item) []ants.Location {
+	a := make([]ants.Location, 0)
+	for loc, item := range allAnts {
+		if item == ants.MY_ANT {
+			a = append(a, loc)
+		}
+	}
+
+	return a
+}
+
 // DoTurn is where you should do your bot's actual work.
 func (bot *Bot) DoTurn(s *ants.State) error {
 	const (
@@ -29,90 +40,66 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 
 	// Score the possible moves for each ant.
 	dirs := []ants.Direction{ants.North, ants.East, ants.South, ants.West, ants.NoMovement}
-	for loc1, ant1 := range s.Map.Ants {
-		// Only interested in my ants for now.
-		if ant1 != ants.MY_ANT {
-			continue
-		}
+	for _, loc1 := range myAnts(s.Map.Ants) {
+		// Create moves and scores for each direction the ant can move.
+		moves := make([]ants.Direction, 0)
+		scores := make([]float64, 0)
+		for i, dir := range dirs {
+			// Don't include this move if it is not legal.
+			newLoc := s.Map.Move(loc1, dir)
+			if !s.Map.SafeDestination(newLoc) {
+				continue
+			}
 
-		// Create scores for each direction the ant can move.
-		scores := make([]float64, len(dirs))
+			var score float64
+			row1, col1 := s.Map.FromLocation(newLoc)
 
-		// Update the move scores for friendly ant proximity.
-		for loc2, _ := range s.Map.Ants {
-			if loc1 != loc2 {
-				for i, dir := range dirs {
-					newLoc := s.Map.Move(loc1, dir)      // Move primary ant in this direction
-					dist := locDistance(s, newLoc, loc2) // Distance from friendly ant
-					scores[i] += friendlyScore / (1 + dist)
+			// Update the move scores for friendly ant proximity.
+			for _, loc2 := range myAnts(s.Map.Ants) {
+				if loc1 != loc2 {
+					row2, col2 := s.Map.FromLocation(loc2)
+					dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+					score += friendlyScore / float64(1+dist)
 				}
 			}
-		}
 
-		// Update the move scores for food proximity.
-		for loc2, _ := range s.Map.Food {
-			for i, dir := range dirs {
-				newLoc := s.Map.Move(loc1, dir)      // Move primary ant in this direction
-				dist := locDistance(s, newLoc, loc2) // Distance from food
-				scores[i] += foodScore / (1 + dist)
+			// Update the move scores for food proximity.
+			for loc2, _ := range s.Map.Food {
+				row2, col2 := s.Map.FromLocation(loc2)
+				dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				score += foodScore / float64(1+dist)
 			}
-		}
 
-		// Update the move scores for hill proximity.
-		for loc2, hill := range s.Map.Hills {
-			for i, dir := range dirs {
-				newLoc := s.Map.Move(loc1, dir)      // Move primary ant in this direction
-				dist := locDistance(s, newLoc, loc2) // Distance from hill
+			// Update the move scores for hill proximity.
+			for loc2, hill := range s.Map.Hills {
+				row2, col2 := s.Map.FromLocation(loc2)
+				dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 				if hill == ants.MY_HILL {
-					scores[i] += myHillScore / (1 + dist)
+					score += myHillScore / float64(1+dist)
 				} else {
-					scores[i] += enemyHillScore / (1 + dist)
+					score += enemyHillScore / float64(1+dist)
 				}
 			}
+
+			moves = append(moves, dirs[i])
+			scores = append(scores, score)
 		}
 
 		// Make the scores all positive.
 		for i := 0; i < len(scores); i++ {
-			scores[i] = math.Pow(10, scores[i])
+			scores[i] = math.Exp(scores[i])
 		}
 
 		// Randomly select a move using scores as weights.
-		var scoreSum float64
-		for i, dir := range dirs {
-			if dir == ants.NoMovement || s.Map.SafeDestination(s.Map.Move(loc1, dir)) {
-				scoreSum += scores[i]
+		if len(scores) > 0 {
+			index := idibot.RandSelect(scores)
+			move := moves[index]
+			if move != ants.NoMovement {
+				s.IssueOrderLoc(loc1, move)
 			}
-		}
-		r := rand.Float64() * scoreSum // [0.0, scoreSum)
-		var scoreSum2 float64
-		var index int
-		for i, dir := range dirs {
-			if dir == ants.NoMovement || s.Map.SafeDestination(s.Map.Move(loc1, dir)) {
-				scoreSum2 += scores[i]
-				if r <= scoreSum2 {
-					index = i
-					break
-				}
-			}
-		}
-		move := dirs[index]
-		if move != ants.NoMovement {
-			s.IssueOrderLoc(loc1, move)
 		}
 	}
 
 	// returning an error will halt the whole program!
 	return nil
-}
-
-func locDistance(s *ants.State, loc1, loc2 ants.Location) float64 {
-	row1, col1 := s.Map.FromLocation(loc1)
-	row2, col2 := s.Map.FromLocation(loc2)
-	return rowColDistance(row1, col1, row2, col2)
-}
-
-func rowColDistance(row1, col1, row2, col2 int) float64 {
-	rDist := row1 - row2
-	colDist := col1 - col2
-	return math.Sqrt(float64(rDist*rDist + colDist*colDist))
 }
