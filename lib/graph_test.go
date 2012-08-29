@@ -1,4 +1,4 @@
-package idibot
+package lib
 
 import (
 	"testing"
@@ -69,3 +69,5 @@ func TestManhattanDistanceMirror(t *testing.T) {
 		t.Error("ManhattanDistance did not return the correct modulo distance.")
 	}
 }
+
+// TODO: euclidean distance

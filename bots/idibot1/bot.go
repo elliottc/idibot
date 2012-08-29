@@ -1,8 +1,8 @@
 package main
 
 import (
-	"idibot"
 	"idibot/ants"
+	"idibot/lib"
 	"math"
 )
 
@@ -58,7 +58,7 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 			for _, loc2 := range myAnts(s.Map.Ants) {
 				if loc1 != loc2 {
 					row2, col2 := s.Map.FromLocation(loc2)
-					dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+					dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 					score += friendlyScore / float64(1+dist)
 				}
 			}
@@ -66,14 +66,14 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 			// Update the move scores for food proximity.
 			for loc2, _ := range s.Map.Food {
 				row2, col2 := s.Map.FromLocation(loc2)
-				dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 				score += foodScore / float64(1+dist)
 			}
 
 			// Update the move scores for hill proximity.
 			for loc2, hill := range s.Map.Hills {
 				row2, col2 := s.Map.FromLocation(loc2)
-				dist := idibot.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 				if hill == ants.MY_HILL {
 					score += myHillScore / float64(1+dist)
 				} else {
@@ -92,7 +92,7 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 
 		// Randomly select a move using scores as weights.
 		if len(scores) > 0 {
-			index := idibot.RandSelect(scores)
+			index := lib.RandSelect(scores)
 			move := moves[index]
 			if move != ants.NoMovement {
 				s.IssueOrderLoc(loc1, move)

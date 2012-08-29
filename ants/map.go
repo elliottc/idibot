@@ -357,6 +357,7 @@ func (d Direction) String() string {
 
 //Move returns a new location which is one step in the specified direction from the specified location.
 func (m *Map) Move(loc Location, d Direction) Location {
+// TODO: this could be changed to be Move(from x,y  to x,y)
 	Row, Col := m.FromLocation(loc)
 	switch d {
 	case North:

@@ -4,3 +4,5 @@ See http://aichallenge.org/
 /ants contains code for interfacing with the ants game.
 
 /bots contains various bot implementations using different strategies.
+
+/lib contains library code helpful for implementing ants strategies.

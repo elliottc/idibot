@@ -1,0 +1,23 @@
+
+/*
+ideas:
+have each ant control itself
+- still pretty simple compared to forming plans involving many ants
+
+all pairs shortest path
+- help ants navigate to objectives
+- objectives become more important the closer they are to your hill
+- objectives become more important the closer the ant is to it
+
+objectives:
+- unknown space - maximize vision of map
+- food
+  - less important when lots of ants queued
+- hills
+- enemy ants
+  - attacking - record each ant's desire to attack, but have it wait until the trade is worthwhile
+  - enemy ants should be impassible (in some range?) for pathing unless attacking
+- maintain path back to home
+- not crowding, spreading out
+- assignment to objectives
+*/
