@@ -1,4 +1,4 @@
-package idibot
+package lib
 
 import (
 	"math/rand"
