@@ -69,3 +69,35 @@ func TestManhattanDistanceMirror(t *testing.T) {
 		t.Error("ManhattanDistance did not return the correct modulo distance.")
 	}
 }
+
+func TestEuclideanDistance0Row(t *testing.T) {
+	expected := 2.0
+	actual := EuclideanDistance(3, 4, 3, 6, 8, 9)
+	if actual != expected {
+		t.Error("EuclideanDistance did not return the correct distance. Expected: ", expected, " actual: ", actual)
+	}
+}
+
+func TestEuclideanDistance0Col(t *testing.T) {
+	expected := 3.0
+	actual := EuclideanDistance(3, 4, 6, 4, 8, 9)
+	if actual != expected {
+		t.Error("EuclideanDistance did not return the correct distance. Expected: ", expected, " actual: ", actual)
+	}
+}
+
+func TestEuclideanDistance(t *testing.T) {
+	expected := 5.0
+	actual := EuclideanDistance(0, 0, 3, 4, 9, 9)
+	if actual != expected {
+		t.Error("EuclideanDistance did not return the correct distance. Expected: ", expected, " actual: ", actual)
+	}
+}
+
+func TestEuclideanDistanceWrapping(t *testing.T) {
+	expected := 10.0
+	actual := EuclideanDistance(15, 2, 2, 27, 21, 31)
+	if actual != expected {
+		t.Error("EuclideanDistance did not return the correct distance. Expected: ", expected, " actual: ", actual)
+	}
+}

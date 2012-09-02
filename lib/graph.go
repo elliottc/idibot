@@ -32,6 +32,7 @@ func ManhattanDistance(row1, col1, row2, col2, maxRow, maxCol int) int {
 	return StraightDistance(row1, row2, maxRow) + StraightDistance(col1, col2, maxCol)
 }
 
+// Gives the euclidean distance between two points on a wrapping map of the given dimensions.
 func EuclideanDistance(row1, col1, row2, col2, maxRow, maxCol int) float64 {
 	r := float64(StraightDistance(row1, row2, maxRow))
 	c := float64(StraightDistance(col1, col2, maxCol))
