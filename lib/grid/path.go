@@ -1,11 +1,11 @@
-package lib
+package grid
 
 import (
 	"container/heap"
 )
 
 type step struct {
-	c coordinate // graph location
+	c Coordinate // graph location
 	h float64    // heuristic value
 }
 
@@ -38,7 +38,7 @@ func (s stepSlice) Swap(i, j int) {
 // Requires that the lengths of the inner slices are equal.
 // Returns a list of coordinates from start to end and true if a path is found,
 // otherwise undefined and false.
-func AStarForGrid(passable [][]bool, start, end coordinate) ([]coordinate, bool) {
+func AStarForGrid(passable [][]bool, start, end Coordinate) ([]Coordinate, bool) {
 
 	// TODO: slice of slice is bad design because the dimensions aren't strict
 	// TODO: pass in a custom function to determine passable?
@@ -53,9 +53,9 @@ func AStarForGrid(passable [][]bool, start, end coordinate) ([]coordinate, bool)
 	}
 
 	// Explore the frontier until the end is found.
-	origin := make(map[coordinate]coordinate)
-	explored := map[coordinate]bool{start: true}
-	frontier := stepSlice{step{start, EuclideanDistance(start.x, start.y, end.x, end.y, xMax, yMax)}}
+	origin := make(map[Coordinate]Coordinate)
+	explored := map[Coordinate]bool{start: true}
+	frontier := stepSlice{step{start, EuclideanDistance(start.row, start.col, end.row, end.col, xMax, yMax)}}
 	for _, endFound := explored[end]; !endFound; _, endFound = explored[end] {
 		if len(frontier) == 0 {
 			// Break early if there is no more frontier to explore.
@@ -65,8 +65,8 @@ func AStarForGrid(passable [][]bool, start, end coordinate) ([]coordinate, bool)
 		// Pick a coordinate from the frontier and add its adjacent coordinates to the frontier.
 		s := heap.Pop(frontier).(step)
 		for _, t := range adjacent(s.c, xMax, yMax) {
-			if _, e := explored[t]; !e && passable[t.x][t.y] {
-				heap.Push(frontier, step{t, EuclideanDistance(t.x, t.y, end.x, end.y, xMax, yMax)})
+			if _, e := explored[t]; !e && passable[t.row][t.col] {
+				heap.Push(frontier, step{t, EuclideanDistance(t.row, t.col, end.row, end.col, xMax, yMax)})
 				origin[t] = s.c
 				explored[t] = true
 			}
@@ -74,7 +74,7 @@ func AStarForGrid(passable [][]bool, start, end coordinate) ([]coordinate, bool)
 	}
 
 	// Construct the path from start to end.
-	path := make([]coordinate, 0)
+	path := make([]Coordinate, 0)
 	c := end
 	for _, ok := origin[c]; ok; _, ok = origin[c] {
 		path = append(path, c)
@@ -86,12 +86,12 @@ func AStarForGrid(passable [][]bool, start, end coordinate) ([]coordinate, bool)
 	return path, endFound
 }
 
-func adjacent(c coordinate, xMax, yMax int) []coordinate {
-	return []coordinate{
-		{normalize(c.x+1, xMax), c.y},
-		{normalize(c.x-1, xMax), c.y},
-		{c.x, normalize(c.y+1, yMax)},
-		{c.x, normalize(c.y-1, yMax)}}
+func adjacent(c Coordinate, xMax, yMax int) []Coordinate {
+	return []Coordinate{
+		{normalize(c.row+1, xMax), c.col},
+		{normalize(c.row-1, xMax), c.col},
+		{c.row, normalize(c.col+1, yMax)},
+		{c.row, normalize(c.col-1, yMax)}}
 }
 
 func normalize(coord, maxCoord int) int { // TODO: bad names

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"idibot/lib/grid"
 	"io"
 	"log"
 	"os"
@@ -230,7 +231,7 @@ func (s *State) IssueOrderRowCol(Row, Col int, d Direction) {
 
 //Call IssueOrderLoc to issue an order for an ant at loc
 //Note that NoMovement is not a valid direction.
-func (s *State) IssueOrderLoc(loc Location, d Direction) {
+func (s *State) IssueOrderLoc(loc grid.Location, d Direction) {
 	Row, Col := s.Map.FromLocation(loc)
 	dest := s.Map.Move(loc, d)
 	s.Map.RemoveDestination(loc)

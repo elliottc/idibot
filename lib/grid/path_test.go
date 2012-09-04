@@ -1,10 +1,9 @@
-package lib
+package grid
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestXYZ(t *testing.T) {
 
 }
-
