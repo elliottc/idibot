@@ -4,9 +4,10 @@ import (
 	"math"
 )
 
-//Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array).
+// Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array).
 type Location int
 
+// Coordinate specifies a location on a grid.
 type Coordinate struct{ row, col int }
 
 type Interface interface {
