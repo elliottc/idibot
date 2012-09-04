@@ -1,6 +1,7 @@
 package ants
 
 import (
+	"idibot/lib/grid"
 	"log"
 )
 
@@ -152,21 +153,18 @@ func FromSymbol(ch byte) Item {
 	return Item(ch) + 'a'
 }
 
-//Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array)
-type Location int
-
 type Map struct {
 	Rows int
 	Cols int
 
 	itemGrid []Item
 
-	Ants         map[Location]Item
-	Hills        map[Location]Item
-	Dead         map[Location]Item
-	Water        map[Location]bool
-	Food         map[Location]bool
-	Destinations map[Location]bool
+	Ants         map[grid.Location]Item
+	Hills        map[grid.Location]Item
+	Dead         map[grid.Location]Item
+	Water        map[grid.Location]bool
+	Food         map[grid.Location]bool
+	Destinations map[grid.Location]bool
 }
 
 //NewMap returns a newly constructed blank map.
@@ -174,7 +172,7 @@ func NewMap(Rows, Cols int) *Map {
 	m := &Map{
 		Rows:     Rows,
 		Cols:     Cols,
-		Water:    make(map[Location]bool),
+		Water:    make(map[grid.Location]bool),
 		itemGrid: make([]Item, Rows*Cols),
 	}
 	m.Reset()
@@ -204,26 +202,26 @@ func (m *Map) Reset() {
 			m.itemGrid[i] = WATER
 		}
 	}
-	m.Ants = make(map[Location]Item)
-	m.Hills = make(map[Location]Item)
-	m.Dead = make(map[Location]Item)
-	m.Food = make(map[Location]bool)
-	m.Destinations = make(map[Location]bool)
+	m.Ants = make(map[grid.Location]Item)
+	m.Hills = make(map[grid.Location]Item)
+	m.Dead = make(map[grid.Location]Item)
+	m.Food = make(map[grid.Location]bool)
+	m.Destinations = make(map[grid.Location]bool)
 }
 
 //Item returns the item at a given location
-func (m *Map) Item(loc Location) Item {
+func (m *Map) Item(loc grid.Location) Item {
 	return m.itemGrid[loc]
 }
 
 //AddWater adds water to the map.
-func (m *Map) AddWater(loc Location) {
+func (m *Map) AddWater(loc grid.Location) {
 	m.Water[loc] = true
 	m.itemGrid[loc] = WATER
 }
 
 //AddAnt adds an ant to the map. It can also accept an occupied ant hill.
-func (m *Map) AddAnt(loc Location, ant Item) {
+func (m *Map) AddAnt(loc grid.Location, ant Item) {
 	m.Ants[loc] = ant.ToAnt()
 	if ant.IsOccupied() {
 		m.Hills[loc] = ant.ToUnoccupied()
@@ -235,7 +233,7 @@ func (m *Map) AddAnt(loc Location, ant Item) {
 }
 
 //AddHill takes an unoccupied ant hill and adds it to the map.
-func (m *Map) AddHill(loc Location, hill Item) {
+func (m *Map) AddHill(loc grid.Location, hill Item) {
 	m.Hills[loc] = hill.ToUnoccupied()
 	if m.Ants[loc] == hill.ToAnt() {
 		hill = hill.ToOccupied() //an ant has already been added here!
@@ -244,7 +242,7 @@ func (m *Map) AddHill(loc Location, hill Item) {
 }
 
 //AddLand adds a circle of land centered on the given location
-func (m *Map) AddLand(center Location, viewrad2 int) {
+func (m *Map) AddLand(center grid.Location, viewrad2 int) {
 	m.DoInRad(center, viewrad2, func(row, col int) {
 		loc := m.FromRowCol(row, col)
 		if m.itemGrid[loc] == UNKNOWN {
@@ -254,7 +252,7 @@ func (m *Map) AddLand(center Location, viewrad2 int) {
 }
 
 //DoInRad performs the given action for every square within the given circle.
-func (m *Map) DoInRad(center Location, rad2 int, Action func(row, col int)) {
+func (m *Map) DoInRad(center grid.Location, rad2 int, Action func(row, col int)) {
 	row1, col1 := m.FromLocation(center)
 	for row := row1 - m.Rows/2; row < row1+m.Rows/2; row++ {
 		for col := col1 - m.Cols/2; col < col1+m.Cols/2; col++ {
@@ -267,31 +265,31 @@ func (m *Map) DoInRad(center Location, rad2 int, Action func(row, col int)) {
 	}
 }
 
-func (m *Map) AddDeadAnt(loc Location, ant Item) {
+func (m *Map) AddDeadAnt(loc grid.Location, ant Item) {
 	m.Dead[loc] = ant
 	m.itemGrid[loc] = DEAD
 }
 
-func (m *Map) AddFood(loc Location) {
+func (m *Map) AddFood(loc grid.Location) {
 	m.Food[loc] = true
 	m.itemGrid[loc] = FOOD
 }
 
-func (m *Map) AddDestination(loc Location) {
+func (m *Map) AddDestination(loc grid.Location) {
 	if m.Destinations[loc] {
 		log.Panicf("Already have something at that destination!")
 	}
 	m.Destinations[loc] = true
 }
 
-func (m *Map) RemoveDestination(loc Location) {
+func (m *Map) RemoveDestination(loc grid.Location) {
 	delete(m.Destinations, loc)
 }
 
 //SafeDestination will tell you if the given location is a 
 //safe place to dispatch an ant. It considers water and both
 //ants that have already sent an order and those that have not.
-func (m *Map) SafeDestination(loc Location) bool {
+func (m *Map) SafeDestination(loc grid.Location) bool {
 	if _, exists := m.Water[loc]; exists {
 		return false
 	}
@@ -302,7 +300,7 @@ func (m *Map) SafeDestination(loc Location) bool {
 }
 
 //FromRowCol returns a Location given an (Row, Col) pair
-func (m *Map) FromRowCol(Row, Col int) Location {
+func (m *Map) FromRowCol(Row, Col int) grid.Location {
 	for Row < 0 {
 		Row += m.Rows
 	}
@@ -316,11 +314,11 @@ func (m *Map) FromRowCol(Row, Col int) Location {
 		Col -= m.Cols
 	}
 
-	return Location(Row*m.Cols + Col)
+	return grid.Location(Row*m.Cols + Col)
 }
 
 //FromLocation returns an (Row, Col) pair given a Location
-func (m *Map) FromLocation(loc Location) (Row, Col int) {
+func (m *Map) FromLocation(loc grid.Location) (Row, Col int) {
 	Row = int(loc) / m.Cols
 	Col = int(loc) % m.Cols
 	return
@@ -356,7 +354,7 @@ func (d Direction) String() string {
 }
 
 //Move returns a new location which is one step in the specified direction from the specified location.
-func (m *Map) Move(loc Location, d Direction) Location {
+func (m *Map) Move(loc grid.Location, d Direction) grid.Location {
 	Row, Col := m.FromLocation(loc)
 	switch d {
 	case North:

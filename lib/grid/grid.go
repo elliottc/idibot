@@ -1,10 +1,14 @@
-package lib
+package grid
 
 import (
 	"math"
 )
 
-type coordinate struct{ x, y int } // TODO: unify around x,y or row,col? or r,c?
+// Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array).
+type Location int
+
+// Coordinate specifies a location on a grid.
+type Coordinate struct{ row, col int }
 
 // Gives the shortest distance between two coordinates on a wrapping line of total distance @total.
 func StraightDistance(coord1, coord2, total int) int {

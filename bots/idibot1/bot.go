@@ -2,7 +2,8 @@ package main
 
 import (
 	"idibot/ants"
-	"idibot/lib"
+	"idibot/lib/grid"
+	"idibot/lib/rand"
 	"math"
 )
 
@@ -18,8 +19,8 @@ func NewBot(s *ants.State) ants.Bot {
 	return bot
 }
 
-func myAnts(allAnts map[ants.Location]ants.Item) []ants.Location {
-	a := make([]ants.Location, 0)
+func myAnts(allAnts map[grid.Location]ants.Item) []grid.Location {
+	a := make([]grid.Location, 0)
 	for loc, item := range allAnts {
 		if item == ants.MY_ANT {
 			a = append(a, loc)
@@ -58,7 +59,7 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 			for _, loc2 := range myAnts(s.Map.Ants) {
 				if loc1 != loc2 {
 					row2, col2 := s.Map.FromLocation(loc2)
-					dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+					dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 					score += friendlyScore / float64(1+dist)
 				}
 			}
@@ -66,14 +67,14 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 			// Update the move scores for food proximity.
 			for loc2, _ := range s.Map.Food {
 				row2, col2 := s.Map.FromLocation(loc2)
-				dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 				score += foodScore / float64(1+dist)
 			}
 
 			// Update the move scores for hill proximity.
 			for loc2, hill := range s.Map.Hills {
 				row2, col2 := s.Map.FromLocation(loc2)
-				dist := lib.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
 				if hill == ants.MY_HILL {
 					score += myHillScore / float64(1+dist)
 				} else {
@@ -92,7 +93,7 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 
 		// Randomly select a move using scores as weights.
 		if len(scores) > 0 {
-			index := lib.RandSelect(scores)
+			index := rand.RandSelect(scores)
 			move := moves[index]
 			if move != ants.NoMovement {
 				s.IssueOrderLoc(loc1, move)
