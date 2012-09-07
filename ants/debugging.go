@@ -3,6 +3,7 @@ package ants
 import (
 	"flag"
 	"fmt"
+	"idibot/lib/grid"
 	"image"
 	"image/color"
 	"image/png"
@@ -109,6 +110,6 @@ func (m *Map) Bounds() image.Rectangle {
 	return image.Rect(0, 0, m.Cols*4, m.Rows*4)
 }
 func (m *Map) At(x, y int) color.Color {
-	loc := m.FromRowCol(y/4, x/4)
+	loc := grid.ToLocation(m, grid.Coordinate{y / 4, x / 4})
 	return m.itemGrid[loc].Color()
 }

@@ -37,7 +37,6 @@ type State struct {
 
 //Start takes the initial parameters from stdin
 func (s *State) Start() error {
-
 	for {
 		line, err := stdin.ReadString('\n')
 		if err != nil {
@@ -99,7 +98,6 @@ func (s *State) Start() error {
 //BetweenTurnWork gets called after a turn but before the map is reset. It is
 //meant to do debugging work.
 func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
-
 	//indicate we're ready
 	os.Stdout.Write([]byte("go\n"))
 
@@ -146,22 +144,25 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 				log.Panicf("Turn number out of sync, expected %v got %v", s.Turn+1, turn)
 			}
 			s.Turn = turn
+
 		case "f":
 			if len(words) < 3 {
 				log.Panicf("Invalid command format (not enough parameters for food): \"%s\"", line)
 			}
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddFood(loc)
+
 		case "w":
 			if len(words) < 3 {
 				log.Panicf("Invalid command format (not enough parameters for water): \"%s\"", line)
 			}
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddWater(loc)
+
 		case "a":
 			if len(words) < 4 {
 				log.Panicf("Invalid command format (not enough parameters for ant): \"%s\"", line)
@@ -169,7 +170,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddAnt(loc, Item(Ant))
 
 			//if it turns out that you don't actually use the visible radius for anything,
@@ -178,6 +179,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 				s.Map.AddDestination(loc)
 				s.Map.AddLand(loc, s.ViewRadius2)
 			}
+
 		case "A":
 			if len(words) < 4 {
 				log.Panicf("Invalid command format (not enough parameters for ant): \"%s\"", line)
@@ -185,7 +187,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddAnt(loc, Item(Ant).ToOccupied())
 
 			//if it turns out that you don't actually use the visible radius for anything,
@@ -194,6 +196,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 				s.Map.AddDestination(loc)
 				s.Map.AddLand(loc, s.ViewRadius2)
 			}
+
 		case "h":
 			if len(words) < 4 {
 				log.Panicf("Invalid command format (not enough parameters for ant): \"%s\"", line)
@@ -201,8 +204,9 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddHill(loc, Item(Ant).ToUnoccupied())
+
 		case "d":
 			if len(words) < 4 {
 				log.Panicf("Invalid command format (not enough parameters for dead ant): \"%s\"", line)
@@ -210,9 +214,8 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := s.Map.FromRowCol(Row, Col)
+			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
 			s.Map.AddDeadAnt(loc, Item(Ant))
-
 		}
 	}
 
@@ -221,22 +224,20 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 
 //Call IssueOrderRowCol to issue an order for an ant at (Row, Col)
 //Note that NoMovement is not a valid direction.
-func (s *State) IssueOrderRowCol(Row, Col int, d Direction) {
-	loc := s.Map.FromRowCol(Row, Col)
-	dest := s.Map.Move(loc, d)
-	s.Map.RemoveDestination(loc)
-	s.Map.AddDestination(dest)
-	fmt.Fprintf(os.Stdout, "o %d %d %s\n", Row, Col, d)
+func (s *State) IssueOrderRowCol(c grid.Coordinate, d Direction) {
+	loc := grid.ToLocation(s.Map, c)
+	s.IssueOrderLoc(loc, d)
 }
 
 //Call IssueOrderLoc to issue an order for an ant at loc
 //Note that NoMovement is not a valid direction.
 func (s *State) IssueOrderLoc(loc grid.Location, d Direction) {
-	Row, Col := s.Map.FromLocation(loc)
 	dest := s.Map.Move(loc, d)
 	s.Map.RemoveDestination(loc)
 	s.Map.AddDestination(dest)
-	fmt.Fprintf(os.Stdout, "o %d %d %s\n", Row, Col, d)
+
+	c := grid.ToCoordinate(s.Map, loc)
+	fmt.Fprintf(os.Stdout, "o %d %d %s\n", c.Row, c.Col, d)
 }
 
 //endTurn is called by Loop, you don't need to call it.

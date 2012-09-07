@@ -38,24 +38,11 @@ func (s stepSlice) Swap(i, j int) {
 // Requires that the lengths of the inner slices are equal.
 // Returns a list of coordinates from start to end and true if a path is found,
 // otherwise undefined and false.
-func AStarForGrid(passable [][]bool, start, end Coordinate) ([]Coordinate, bool) {
-
-	// TODO: slice of slice is bad design because the dimensions aren't strict
-	// TODO: pass in a custom function to determine passable?
-
-	xMax := len(passable)
-	if xMax == 0 {
-		return nil, false
-	}
-	yMax := len(passable[0])
-	if yMax == 0 {
-		return nil, false
-	}
-
+func AStarForGrid(g Interface, start, end Coordinate) ([]Coordinate, bool) {
 	// Explore the frontier until the end is found.
 	origin := make(map[Coordinate]Coordinate)
 	explored := map[Coordinate]bool{start: true}
-	frontier := stepSlice{step{start, EuclideanDistance(start.row, start.col, end.row, end.col, xMax, yMax)}}
+	frontier := stepSlice{step{start, EuclideanDistance(g, start, end)}}
 	for _, endFound := explored[end]; !endFound; _, endFound = explored[end] {
 		if len(frontier) == 0 {
 			// Break early if there is no more frontier to explore.
@@ -64,9 +51,9 @@ func AStarForGrid(passable [][]bool, start, end Coordinate) ([]Coordinate, bool)
 
 		// Pick a coordinate from the frontier and add its adjacent coordinates to the frontier.
 		s := heap.Pop(frontier).(step)
-		for _, t := range adjacent(s.c, xMax, yMax) {
-			if _, e := explored[t]; !e && passable[t.row][t.col] {
-				heap.Push(frontier, step{t, EuclideanDistance(t.row, t.col, end.row, end.col, xMax, yMax)})
+		for _, t := range adjacent(g, s.c) {
+			if _, e := explored[t]; !e && g.IsPassable(t) {
+				heap.Push(frontier, step{t, EuclideanDistance(g, t, end)})
 				origin[t] = s.c
 				explored[t] = true
 			}
@@ -86,15 +73,15 @@ func AStarForGrid(passable [][]bool, start, end Coordinate) ([]Coordinate, bool)
 	return path, endFound
 }
 
-func adjacent(c Coordinate, xMax, yMax int) []Coordinate {
+func adjacent(g Interface, c Coordinate) []Coordinate {
 	return []Coordinate{
-		{normalize(c.row+1, xMax), c.col},
-		{normalize(c.row-1, xMax), c.col},
-		{c.row, normalize(c.col+1, yMax)},
-		{c.row, normalize(c.col-1, yMax)}}
+		{normalize(c.Row+1, g.NumRows()), c.Col},
+		{normalize(c.Row-1, g.NumRows()), c.Col},
+		{c.Row, normalize(c.Col+1, g.NumCols())},
+		{c.Row, normalize(c.Col-1, g.NumCols())}}
 }
 
-func normalize(coord, maxCoord int) int { // TODO: bad names
+func normalize(coord, maxCoord int) int {
 	coord = coord % maxCoord
 	if coord < 0 {
 		coord += maxCoord

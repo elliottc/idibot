@@ -243,8 +243,8 @@ func (m *Map) AddHill(loc grid.Location, hill Item) {
 
 //AddLand adds a circle of land centered on the given location
 func (m *Map) AddLand(center grid.Location, viewrad2 int) {
-	m.DoInRad(center, viewrad2, func(row, col int) {
-		loc := m.FromRowCol(row, col)
+	m.DoInRad(center, viewrad2, func(c grid.Coordinate) {
+		loc := grid.ToLocation(m, c)
 		if m.itemGrid[loc] == UNKNOWN {
 			m.itemGrid[loc] = LAND
 		}
@@ -252,14 +252,14 @@ func (m *Map) AddLand(center grid.Location, viewrad2 int) {
 }
 
 //DoInRad performs the given action for every square within the given circle.
-func (m *Map) DoInRad(center grid.Location, rad2 int, Action func(row, col int)) {
-	row1, col1 := m.FromLocation(center)
-	for row := row1 - m.Rows/2; row < row1+m.Rows/2; row++ {
-		for col := col1 - m.Cols/2; col < col1+m.Cols/2; col++ {
-			row_delta := row - row1
-			col_delta := col - col1
+func (m *Map) DoInRad(center grid.Location, rad2 int, Action func(c grid.Coordinate)) {
+	c := grid.ToCoordinate(m, center)
+	for row := c.Row - m.Rows/2; row < c.Row+m.Rows/2; row++ {
+		for col := c.Col - m.Cols/2; col < c.Col+m.Cols/2; col++ {
+			row_delta := row - c.Row
+			col_delta := col - c.Col
 			if row_delta*row_delta+col_delta*col_delta < rad2 {
-				Action(row, col)
+				Action(grid.Coordinate{row, col})
 			}
 		}
 	}
@@ -299,31 +299,6 @@ func (m *Map) SafeDestination(loc grid.Location) bool {
 	return true
 }
 
-//FromRowCol returns a Location given an (Row, Col) pair
-func (m *Map) FromRowCol(Row, Col int) grid.Location {
-	for Row < 0 {
-		Row += m.Rows
-	}
-	for Row >= m.Rows {
-		Row -= m.Rows
-	}
-	for Col < 0 {
-		Col += m.Cols
-	}
-	for Col >= m.Cols {
-		Col -= m.Cols
-	}
-
-	return grid.Location(Row*m.Cols + Col)
-}
-
-//FromLocation returns an (Row, Col) pair given a Location
-func (m *Map) FromLocation(loc grid.Location) (Row, Col int) {
-	Row = int(loc) / m.Cols
-	Col = int(loc) % m.Cols
-	return
-}
-
 //Direction represents the direction concept for issuing orders.
 type Direction int
 
@@ -356,19 +331,32 @@ func (d Direction) String() string {
 //Move returns a new location which is one step in the specified direction from the specified location.
 func (m *Map) Move(loc grid.Location, d Direction) grid.Location {
 	// TODO: this could be changed to be Move(from x,y  to x,y)
-	Row, Col := m.FromLocation(loc)
+	c := grid.ToCoordinate(m, loc)
 	switch d {
 	case North:
-		Row -= 1
+		c.Row -= 1
 	case South:
-		Row += 1
+		c.Row += 1
 	case West:
-		Col -= 1
+		c.Col -= 1
 	case East:
-		Col += 1
+		c.Col += 1
 	case NoMovement: //do nothing
 	default:
 		log.Panicf("%v is not a valid direction", d)
 	}
-	return m.FromRowCol(Row, Col) //this will handle wrapping out-of-bounds numbers
+	return grid.ToLocation(m, c) //this will handle wrapping out-of-bounds numbers
+}
+
+// These make Map implement grid.Interface.
+func (m *Map) NumRows() int {
+	return m.Rows
+}
+
+func (m *Map) NumCols() int {
+	return m.Cols
+}
+
+func (m *Map) IsPassable(c grid.Coordinate) bool {
+	return m.SafeDestination(grid.ToLocation(m, c))
 }
