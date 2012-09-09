@@ -151,7 +151,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			}
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddFood(loc)
 
 		case "w":
@@ -160,7 +160,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			}
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddWater(loc)
 
 		case "a":
@@ -170,7 +170,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddAnt(loc, Item(Ant))
 
 			//if it turns out that you don't actually use the visible radius for anything,
@@ -187,7 +187,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddAnt(loc, Item(Ant).ToOccupied())
 
 			//if it turns out that you don't actually use the visible radius for anything,
@@ -204,7 +204,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddHill(loc, Item(Ant).ToUnoccupied())
 
 		case "d":
@@ -214,7 +214,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 			Row, _ := strconv.Atoi(words[1])
 			Col, _ := strconv.Atoi(words[2])
 			Ant, _ := strconv.Atoi(words[3])
-			loc := grid.ToLocation(s.Map, grid.Coordinate{Row, Col})
+			loc := s.Map.ToLocation(grid.Coordinate{Row, Col})
 			s.Map.AddDeadAnt(loc, Item(Ant))
 		}
 	}
@@ -225,18 +225,18 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) error {
 //Call IssueOrderRowCol to issue an order for an ant at (Row, Col)
 //Note that NoMovement is not a valid direction.
 func (s *State) IssueOrderRowCol(c grid.Coordinate, d Direction) {
-	loc := grid.ToLocation(s.Map, c)
+	loc := s.Map.ToLocation(c)
 	s.IssueOrderLoc(loc, d)
 }
 
 //Call IssueOrderLoc to issue an order for an ant at loc
 //Note that NoMovement is not a valid direction.
-func (s *State) IssueOrderLoc(loc grid.Location, d Direction) {
+func (s *State) IssueOrderLoc(loc Location, d Direction) {
 	dest := s.Map.Move(loc, d)
 	s.Map.RemoveDestination(loc)
 	s.Map.AddDestination(dest)
 
-	c := grid.ToCoordinate(s.Map, loc)
+	c := s.Map.ToCoordinate(loc)
 	fmt.Fprintf(os.Stdout, "o %d %d %s\n", c.Row, c.Col, d)
 }
 

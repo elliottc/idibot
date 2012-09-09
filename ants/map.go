@@ -153,18 +153,21 @@ func FromSymbol(ch byte) Item {
 	return Item(ch) + 'a'
 }
 
+// Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array).
+type Location int
+
 type Map struct {
 	Rows int
 	Cols int
 
 	itemGrid []Item
 
-	Ants         map[grid.Location]Item
-	Hills        map[grid.Location]Item
-	Dead         map[grid.Location]Item
-	Water        map[grid.Location]bool
-	Food         map[grid.Location]bool
-	Destinations map[grid.Location]bool
+	Ants         map[Location]Item
+	Hills        map[Location]Item
+	Dead         map[Location]Item
+	Water        map[Location]bool
+	Food         map[Location]bool
+	Destinations map[Location]bool
 }
 
 //NewMap returns a newly constructed blank map.
@@ -172,7 +175,7 @@ func NewMap(Rows, Cols int) *Map {
 	m := &Map{
 		Rows:     Rows,
 		Cols:     Cols,
-		Water:    make(map[grid.Location]bool),
+		Water:    make(map[Location]bool),
 		itemGrid: make([]Item, Rows*Cols),
 	}
 	m.Reset()
@@ -202,26 +205,26 @@ func (m *Map) Reset() {
 			m.itemGrid[i] = WATER
 		}
 	}
-	m.Ants = make(map[grid.Location]Item)
-	m.Hills = make(map[grid.Location]Item)
-	m.Dead = make(map[grid.Location]Item)
-	m.Food = make(map[grid.Location]bool)
-	m.Destinations = make(map[grid.Location]bool)
+	m.Ants = make(map[Location]Item)
+	m.Hills = make(map[Location]Item)
+	m.Dead = make(map[Location]Item)
+	m.Food = make(map[Location]bool)
+	m.Destinations = make(map[Location]bool)
 }
 
 //Item returns the item at a given location
-func (m *Map) Item(loc grid.Location) Item {
+func (m *Map) Item(loc Location) Item {
 	return m.itemGrid[loc]
 }
 
 //AddWater adds water to the map.
-func (m *Map) AddWater(loc grid.Location) {
+func (m *Map) AddWater(loc Location) {
 	m.Water[loc] = true
 	m.itemGrid[loc] = WATER
 }
 
 //AddAnt adds an ant to the map. It can also accept an occupied ant hill.
-func (m *Map) AddAnt(loc grid.Location, ant Item) {
+func (m *Map) AddAnt(loc Location, ant Item) {
 	m.Ants[loc] = ant.ToAnt()
 	if ant.IsOccupied() {
 		m.Hills[loc] = ant.ToUnoccupied()
@@ -233,7 +236,7 @@ func (m *Map) AddAnt(loc grid.Location, ant Item) {
 }
 
 //AddHill takes an unoccupied ant hill and adds it to the map.
-func (m *Map) AddHill(loc grid.Location, hill Item) {
+func (m *Map) AddHill(loc Location, hill Item) {
 	m.Hills[loc] = hill.ToUnoccupied()
 	if m.Ants[loc] == hill.ToAnt() {
 		hill = hill.ToOccupied() //an ant has already been added here!
@@ -242,9 +245,9 @@ func (m *Map) AddHill(loc grid.Location, hill Item) {
 }
 
 //AddLand adds a circle of land centered on the given location
-func (m *Map) AddLand(center grid.Location, viewrad2 int) {
+func (m *Map) AddLand(center Location, viewrad2 int) {
 	m.DoInRad(center, viewrad2, func(c grid.Coordinate) {
-		loc := grid.ToLocation(m, c)
+		loc := m.ToLocation(c)
 		if m.itemGrid[loc] == UNKNOWN {
 			m.itemGrid[loc] = LAND
 		}
@@ -252,8 +255,8 @@ func (m *Map) AddLand(center grid.Location, viewrad2 int) {
 }
 
 //DoInRad performs the given action for every square within the given circle.
-func (m *Map) DoInRad(center grid.Location, rad2 int, Action func(c grid.Coordinate)) {
-	c := grid.ToCoordinate(m, center)
+func (m *Map) DoInRad(center Location, rad2 int, Action func(c grid.Coordinate)) {
+	c := m.ToCoordinate(center)
 	for row := c.Row - m.Rows/2; row < c.Row+m.Rows/2; row++ {
 		for col := c.Col - m.Cols/2; col < c.Col+m.Cols/2; col++ {
 			row_delta := row - c.Row
@@ -265,31 +268,31 @@ func (m *Map) DoInRad(center grid.Location, rad2 int, Action func(c grid.Coordin
 	}
 }
 
-func (m *Map) AddDeadAnt(loc grid.Location, ant Item) {
+func (m *Map) AddDeadAnt(loc Location, ant Item) {
 	m.Dead[loc] = ant
 	m.itemGrid[loc] = DEAD
 }
 
-func (m *Map) AddFood(loc grid.Location) {
+func (m *Map) AddFood(loc Location) {
 	m.Food[loc] = true
 	m.itemGrid[loc] = FOOD
 }
 
-func (m *Map) AddDestination(loc grid.Location) {
+func (m *Map) AddDestination(loc Location) {
 	if m.Destinations[loc] {
 		log.Panicf("Already have something at that destination!")
 	}
 	m.Destinations[loc] = true
 }
 
-func (m *Map) RemoveDestination(loc grid.Location) {
+func (m *Map) RemoveDestination(loc Location) {
 	delete(m.Destinations, loc)
 }
 
 //SafeDestination will tell you if the given location is a 
 //safe place to dispatch an ant. It considers water and both
 //ants that have already sent an order and those that have not.
-func (m *Map) SafeDestination(loc grid.Location) bool {
+func (m *Map) SafeDestination(loc Location) bool {
 	if _, exists := m.Water[loc]; exists {
 		return false
 	}
@@ -297,6 +300,31 @@ func (m *Map) SafeDestination(loc grid.Location) bool {
 		return false
 	}
 	return true
+}
+
+// ToLocation returns a Location given an (Row, Col) pair.
+func (m *Map) ToLocation(c grid.Coordinate) Location {
+	for c.Row < 0 {
+		c.Row += m.Rows
+	}
+	for c.Row >= m.Rows {
+		c.Row -= m.Rows
+	}
+	for c.Col < 0 {
+		c.Col += m.Cols
+	}
+	for c.Col >= m.Cols {
+		c.Col -= m.Cols
+	}
+
+	return Location(c.Row*m.Cols + c.Col)
+}
+
+// ToCoordinate returns an (Row, Col) pair given a Location.
+func (m *Map) ToCoordinate(loc Location) grid.Coordinate {
+	row := int(loc) / m.Cols
+	col := int(loc) % m.Cols
+	return grid.Coordinate{row, col}
 }
 
 //Direction represents the direction concept for issuing orders.
@@ -329,9 +357,9 @@ func (d Direction) String() string {
 }
 
 //Move returns a new location which is one step in the specified direction from the specified location.
-func (m *Map) Move(loc grid.Location, d Direction) grid.Location {
+func (m *Map) Move(loc Location, d Direction) Location {
 	// TODO: this could be changed to be Move(from x,y  to x,y)
-	c := grid.ToCoordinate(m, loc)
+	c := m.ToCoordinate(loc)
 	switch d {
 	case North:
 		c.Row -= 1
@@ -345,7 +373,7 @@ func (m *Map) Move(loc grid.Location, d Direction) grid.Location {
 	default:
 		log.Panicf("%v is not a valid direction", d)
 	}
-	return grid.ToLocation(m, c) //this will handle wrapping out-of-bounds numbers
+	return m.ToLocation(c) //this will handle wrapping out-of-bounds numbers
 }
 
 // These make Map implement grid.Interface.
@@ -358,5 +386,5 @@ func (m *Map) NumCols() int {
 }
 
 func (m *Map) IsPassable(c grid.Coordinate) bool {
-	return m.SafeDestination(grid.ToLocation(m, c))
+	return m.SafeDestination(m.ToLocation(c))
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"idibot/ants"
-	"idibot/lib/grid"
 )
 
 type Bot struct {
@@ -18,8 +17,8 @@ func NewBot(s *ants.State) ants.Bot {
 }
 
 // TODO: duplicated
-func myAnts(allAnts map[grid.Location]ants.Item) []grid.Location {
-	a := make([]grid.Location, 0)
+func myAnts(allAnts map[ants.Location]ants.Item) []ants.Location {
+	a := make([]ants.Location, 0)
 	for loc, item := range allAnts {
 		if item == ants.MY_ANT {
 			a = append(a, loc)

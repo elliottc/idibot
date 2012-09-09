@@ -110,6 +110,6 @@ func (m *Map) Bounds() image.Rectangle {
 	return image.Rect(0, 0, m.Cols*4, m.Rows*4)
 }
 func (m *Map) At(x, y int) color.Color {
-	loc := grid.ToLocation(m, grid.Coordinate{y / 4, x / 4})
+	loc := m.ToLocation(grid.Coordinate{y / 4, x / 4})
 	return m.itemGrid[loc].Color()
 }
