@@ -19,8 +19,8 @@ func NewBot(s *ants.State) ants.Bot {
 	return bot
 }
 
-func myAnts(allAnts map[grid.Location]ants.Item) []grid.Location {
-	a := make([]grid.Location, 0)
+func myAnts(allAnts map[ants.Location]ants.Item) []ants.Location {
+	a := make([]ants.Location, 0)
 	for loc, item := range allAnts {
 		if item == ants.MY_ANT {
 			a = append(a, loc)
@@ -53,28 +53,28 @@ func (bot *Bot) DoTurn(s *ants.State) error {
 			}
 
 			var score float64
-			row1, col1 := s.Map.FromLocation(newLoc)
+			c1 := s.Map.ToCoordinate(newLoc)
 
 			// Update the move scores for friendly ant proximity.
 			for _, loc2 := range myAnts(s.Map.Ants) {
 				if loc1 != loc2 {
-					row2, col2 := s.Map.FromLocation(loc2)
-					dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+					c2 := s.Map.ToCoordinate(loc2)
+					dist := grid.ManhattanDistance(s.Map, c1, c2)
 					score += friendlyScore / float64(1+dist)
 				}
 			}
 
 			// Update the move scores for food proximity.
 			for loc2, _ := range s.Map.Food {
-				row2, col2 := s.Map.FromLocation(loc2)
-				dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				c2 := s.Map.ToCoordinate(loc2)
+				dist := grid.ManhattanDistance(s.Map, c1, c2)
 				score += foodScore / float64(1+dist)
 			}
 
 			// Update the move scores for hill proximity.
 			for loc2, hill := range s.Map.Hills {
-				row2, col2 := s.Map.FromLocation(loc2)
-				dist := grid.ManhattanDistance(row1, col1, row2, col2, s.Map.Rows, s.Map.Cols)
+				c2 := s.Map.ToCoordinate(loc2)
+				dist := grid.ManhattanDistance(s.Map, c1, c2)
 				if hill == ants.MY_HILL {
 					score += myHillScore / float64(1+dist)
 				} else {

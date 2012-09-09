@@ -4,14 +4,18 @@ import (
 	"math"
 )
 
-// Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array).
-type Location int
+// Coordinate specifies a location on a grid. 
+type Coordinate struct{ Row, Col int }
 
-// Coordinate specifies a location on a grid.
-type Coordinate struct{ row, col int }
+// This specifies the interface a grid must implement to work with these library methods.
+type Interface interface {
+	NumRows() int
+	NumCols() int
+	IsPassable(c Coordinate) bool
+}
 
 // Gives the shortest distance between two coordinates on a wrapping line of total distance @total.
-func StraightDistance(coord1, coord2, total int) int {
+func straightDistance(coord1, coord2, total int) int {
 	if total < 0 {
 		panic("mapTotal must be postive.")
 	}
@@ -32,13 +36,13 @@ func StraightDistance(coord1, coord2, total int) int {
 }
 
 // Gives the manhattan distance between two points on a wrapping map of the given dimensions.
-func ManhattanDistance(row1, col1, row2, col2, maxRow, maxCol int) int {
-	return StraightDistance(row1, row2, maxRow) + StraightDistance(col1, col2, maxCol)
+func ManhattanDistance(g Interface, c1, c2 Coordinate) int {
+	return straightDistance(c1.Row, c2.Row, g.NumRows()) + straightDistance(c1.Col, c2.Col, g.NumCols())
 }
 
 // Gives the euclidean distance between two points on a wrapping map of the given dimensions.
-func EuclideanDistance(row1, col1, row2, col2, maxRow, maxCol int) float64 {
-	r := float64(StraightDistance(row1, row2, maxRow))
-	c := float64(StraightDistance(col1, col2, maxCol))
+func EuclideanDistance(g Interface, c1, c2 Coordinate) float64 {
+	r := float64(straightDistance(c1.Row, c2.Row, g.NumRows()))
+	c := float64(straightDistance(c1.Col, c2.Col, g.NumCols()))
 	return math.Sqrt(r*r + c*c)
 }
