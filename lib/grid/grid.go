@@ -26,8 +26,6 @@ func straightDistance(coord1, coord2, total int) int {
 		d = -d
 	}
 
-	// TODO: can i do mod N/2?
-
 	// Get the distance in the other direction.
 	d2 := total - d
 
